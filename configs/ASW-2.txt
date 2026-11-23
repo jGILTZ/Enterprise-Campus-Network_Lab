@@ -1,0 +1,147 @@
+﻿# ! --- System & Global Settings ---
+
+
+Current configuration : 3448 bytes
+!
+version 15.0
+service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname ASW-2
+!
+!
+!
+!
+!
+# ! --- AAA & Security ---
+
+
+aaa new-model
+!
+aaa authentication login TACACS_LIST group tacacs+ local
+!
+!
+!
+!
+ip ssh version 2
+ip domain-name officeA.com
+!
+username cisco secret 5 mERr$Bok4KDfVutXOJolNq009M/
+!
+# ! --- VLANs & Layer 2 Infrastructure ---
+
+
+vtp mode transparent
+!
+ip arp inspection vlan 10,20,30,40,99
+!
+ip dhcp snooping vlan 10,20,30,40,99
+no ip dhcp snooping information option
+ip dhcp snooping
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+spanning-tree vlan 10,20,30,40,99 priority 28672
+!
+vlan 10
+name Wired_PCs
+!
+vlan 20
+name VoIP
+!
+vlan 30
+name Wireless
+!
+vlan 99
+name Management
+!
+# ! --- Physical & Logical Interfaces ---
+
+
+interface FastEthernet0/1
+switchport access vlan 10
+switchport mode access
+switchport voice vlan 20
+switchport port-security
+switchport port-security maximum 3
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+switchport port-security mac-address sticky 000A.4176.1658
+switchport port-security mac-address sticky 0060.3EE6.BC5C
+spanning-tree portfast
+spanning-tree bpduguard enable
+!
+interface FastEthernet0/2
+switchport access vlan 30
+switchport mode access
+switchport port-security
+switchport port-security maximum 3
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+switchport port-security mac-address sticky 0040.0B28.1A57
+switchport port-security mac-address sticky 0090.2B15.5D99
+spanning-tree portfast
+spanning-tree bpduguard enable
+!
+interface GigabitEthernet0/1
+switchport trunk native vlan 77
+switchport trunk allowed vlan 10,20,30,40,99
+ip arp inspection trust
+ip dhcp snooping trust
+switchport mode trunk
+switchport nonegotiate
+!
+interface GigabitEthernet0/2
+switchport trunk native vlan 77
+switchport trunk allowed vlan 10,20,30,40,99
+ip arp inspection trust
+ip dhcp snooping trust
+switchport mode trunk
+switchport nonegotiate
+!
+interface Vlan1
+no ip address
+shutdown
+!
+interface Vlan99
+ip address 192.168.99.2 255.255.255.240
+!
+ip default-gateway 192.168.99.14
+!
+# ! --- Logging, NTP & Management Services ---
+
+
+logging trap debugging
+logging 192.168.40.1
+tacacs-server host 192.168.40.2
+tacacs-server key ccna
+!
+!
+!
+access-list 1 permit host 192.168.30.1
+# ! --- Line Configuration ---
+
+
+line con 0
+logging synchronous
+login authentication TACACS_LIST
+!
+line vty 0 4
+access-class 1 in
+exec-timeout 30 0
+login authentication TACACS_LIST
+transport input ssh
+line vty 5 15
+access-class 1 in
+exec-timeout 30 0
+login authentication TACACS_LIST
+transport input ssh
+!
+!
+!
+ntp authenticate
+ntp trusted-key 1
+ntp server 192.168.40.1 key 1
+!
+end

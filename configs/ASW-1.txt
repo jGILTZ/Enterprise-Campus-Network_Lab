@@ -1,0 +1,106 @@
+﻿! --- System & Global Settings ---
+Current configuration : 3184 bytes
+version 15.0
+hostname ASW-1
+ip domain-name officeA.com
+service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+ip ssh version 2
+!
+! --- AAA & Security ---
+aaa new-model
+aaa authentication login TACACS_LIST group tacacs+ local
+username cisco secret 5 mERr$Bok4KDfVutXOJolNq009M/
+tacacs-server host 192.168.40.2
+tacacs-server key ccna
+access-list 1 permit host 192.168.30.1
+!
+! --- VLANs & Layer 2 Infrastructure ---
+vtp mode transparent
+vlan 10
+ name Wired_PCs
+vlan 99
+ name Management
+ip arp inspection vlan 10,20,30,40,99
+ip dhcp snooping vlan 10,20,30,40,99
+no ip dhcp snooping information option
+ip dhcp snooping
+spanning-tree mode pvst
+spanning-tree extend system-id
+spanning-tree vlan 10,20,30,40,99 priority 28672
+!
+
+
+! --- Physical & Logical Interfaces ---
+interface FastEthernet0/1
+switchport access vlan 10
+switchport mode access
+switchport port-security
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+switchport port-security mac-address sticky 0060.2FDA.5207
+spanning-tree portfast
+spanning-tree bpduguard enable
+!
+interface FastEthernet0/2
+switchport access vlan 10
+switchport mode access
+switchport port-security
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+switchport port-security mac-address sticky 0001.C911.9346
+spanning-tree portfast
+spanning-tree bpduguard enable
+!
+interface range FastEthernet0/3 - 24
+!
+interface GigabitEthernet0/1
+switchport trunk native vlan 77
+switchport trunk allowed vlan 10,20,30,40,99
+ip arp inspection trust
+ip dhcp snooping trust
+switchport mode trunk
+switchport nonegotiate
+!
+interface GigabitEthernet0/2
+switchport trunk native vlan 77
+switchport trunk allowed vlan 10,20,30,40,99
+ip arp inspection trust
+ip dhcp snooping trust
+switchport mode trunk
+switchport nonegotiate
+!
+interface Vlan1
+no ip address
+shutdown
+!
+interface Vlan99
+ip address 192.168.99.1 255.255.255.240
+!
+!
+! --- Logging, NTP & Management Services ---
+logging trap debugging
+logging 192.168.40.1
+ntp authenticate
+ntp trusted-key 1
+ntp server 192.168.40.1 key 1
+ip default-gateway 192.168.99.14
+!
+! --- Line Configuration ---
+line con 0
+ logging synchronous
+ login authentication TACACS_LIST
+!
+line vty 0 4
+ access-class 1 in
+ exec-timeout 30 0
+ login authentication TACACS_LIST
+ transport input ssh
+line vty 5 15
+ access-class 1 in
+ exec-timeout 30 0
+ login authentication TACACS_LIST
+ transport input ssh
+!
+end
