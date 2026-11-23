@@ -1,0 +1,107 @@
+﻿Current configuration : 1839 bytes
+# ! --- System & Global Settings ---
+!
+version 12.2
+service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname R1
+!
+# ! --- Security ---
+!
+enable secret 5 mERr$Bok4KDfVutXOJolNq009M/
+!
+no ip cef
+no ipv6 cef
+!
+username cisco privilege 15 secret 5 mERr$Bok4KDfVutXOJolNq009M/
+!
+ip ssh version 2
+ip domain-name officeA.com
+!
+# ! --- Physical & Logical Interfaces ---
+!
+interface Loopback0
+ip address 1.1.1.1 255.255.255.255
+!
+interface GigabitEthernet0/0
+ip address 192.168.0.1 255.255.255.252
+ip ospf network point-to-point
+ip ospf priority 1
+ip nat inside
+duplex auto
+speed auto
+!
+interface GigabitEthernet1/0
+ip address 192.168.0.5 255.255.255.252
+ip ospf network point-to-point
+ip ospf priority 1
+ip nat inside
+duplex auto
+speed auto
+!
+
+
+interface GigabitEthernet2/0
+ip address 203.0.113.1 255.255.255.252
+ip nat outside
+!
+# ! --- Routing Protocols ---
+!
+router ospf 1
+log-adjacency-changes
+passive-interface GigabitEthernet2/0
+passive-interface Loopback0
+network 1.1.1.1 0.0.0.0 area 0
+network 192.168.0.0 0.0.0.3 area 0
+network 192.168.0.4 0.0.0.3 area 0
+network 203.0.113.0 0.0.0.3 area 0
+default-information originate
+!
+router bgp 65001
+bgp log-neighbor-changes
+no synchronization
+neighbor 203.0.113.2 remote-as 100
+network 192.168.0.0 mask 255.255.0.0
+!
+# ! --- NAT & Access Lists ---
+!
+ip nat inside source list 2 interface GigabitEthernet2/0 overload
+ip classless
+ip route 0.0.0.0 0.0.0.0 203.0.113.2
+!
+# ! --- Logging, NTP & Management Services ---
+!
+ip flow-export version 9
+!
+!
+access-list 2 permit 192.168.0.0 0.0.63.255
+!
+logging trap debugging
+logging 192.168.40.1
+# ! --- Line Configuration ---
+!
+line con 0
+logging synchronous
+!
+line aux 0
+!
+line vty 0 4
+access-class 1 in
+exec-timeout 30 0
+login
+transport input ssh
+line vty 5 15
+access-class 1 in
+exec-timeout 30 0
+login
+transport input ssh
+!
+!
+ntp authentication-key 1 md5 08224F4008 7
+ntp authenticate
+ntp trusted-key 1
+ntp server 192.168.40.1 key 1
+!
+end
